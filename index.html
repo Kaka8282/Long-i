@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Bạn</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, #0a0a2e 0%, #000000 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .share-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            pointer-events: all;
+        }
+
+        .share-input {
+            padding: 12px 16px;
+            border: 2px solid #ff1493;
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #ffffff;
+            font-size: 0.95em;
+            width: 200px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .share-input::placeholder {
+            color: #ff69b4;
+        }
+
+        .share-input:focus {
+            background: rgba(0, 0, 0, 0.9);
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.6);
+        }
+
+        .share-btn {
+            padding: 12px 20px;
+            border: 2px solid #ff1493;
+            border-radius: 25px;
+            background: rgba(255, 20, 147, 0.3);
+            color: #ff1493;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            pointer-events: all;
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 20, 147, 0.6);
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
+            transform: scale(1.05);
+        }
+
+        .share-btn:active {
+            transform: scale(0.95);
+        }
+
+        .share-link-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 10, 46, 0.95);
+            border: 2px solid #ff1493;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            pointer-events: all;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(255, 20, 147, 0.5);
+        }
+
+        .share-link-display.active {
+            display: block;
+        }
+
+        .share-link-display h2 {
+            color: #ff1493;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 20, 147, 0.6);
+        }
+
+        .share-link-display p {
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        .share-link-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ff1493;
+            margin: 15px 0;
+            color: #ff69b4;
+            word-break: break-all;
+            font-size: 0.85em;
+            user-select: all;
+        }
+
+        .share-link-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .share-link-buttons button {
+            padding: 10px 16px;
+            border: 2px solid #ff1493;
+            border-radius: 10px;
+            background: rgba(255, 20, 147, 0.3);
+            color: #ff1493;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            pointer-events: all;
+        }
+
+        .share-link-buttons button:hover {
+            background: rgba(255, 20, 147, 0.6);
+            box-shadow: 0 0 15px rgba(255, 20, 147, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <svg class="starfield" id="starfield"></svg>
+
+    <div class="share-container">
+        <input type="text" class="share-input" id="friendNameInput" placeholder="Nhập tên bạn...">
+        <button class="share-btn" onclick="generateShareLink()">📤 Tạo Link</button>
+    </div>
+
+    <div class="share-link-display" id="shareLinkDisplay">
+        <h2>💕 Link Chia Sẻ</h2>
+        <p id="shareMessage">Copy link dưới đây:</p>
+        <div class="share-link-box" id="shareLinkBox">Loading...</div>
+        <div class="share-link-buttons">
+            <button onclick="copyLink()">📋 Sao Chép</button>
+            <button onclick="shareZalo()">💬 Copy Để Share</button>
+            <button onclick="closeShare()">✕ Đóng</button>
+        </div>
+    </div>
+
+    <script>
+        // Tạo sao
+        function createStarfield() {
+            const svg = document.getElementById('starfield');
+            svg.setAttribute('width', window.innerWidth);
+            svg.setAttribute('height', window.innerHeight);
+            svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+            
+            for (let i = 0; i < 200; i++) {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', Math.random() * window.innerWidth);
+                circle.setAttribute('cy', Math.random() * window.innerHeight);
+                circle.setAttribute('r', Math.random() * 1.5);
+                circle.setAttribute('fill', 'white');
+                circle.setAttribute('opacity', Math.random() * 0.7 + 0.3);
+                svg.appendChild(circle);
+            }
+        }
+
+        // Tạo trái tim nổ
+        function createHeartParticles(x, y) {
+            const particleCount = 80;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.innerHTML = '❤️';
+                particle.style.position = 'fixed';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.pointerEvents = 'none';
+                particle.style.fontSize = Math.random() * 25 + 15 + 'px';
+                particle.style.zIndex = '1000';
+                particle.style.textShadow = '0 0 15px rgba(255, 20, 147, 0.9)';
+                particle.style.filter = 'drop-shadow(0 0 8px #ff1493)';
+                
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const velocity = Math.random() * 6 + 3;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+                
+                document.body.appendChild(particle);
+                
+                let posX = x, posY = y;
+                let life = 1;
+                const duration = 3000;
+                const startTime = Date.now();
+                
+                function animate() {
+                    const elapsed = Date.now() - startTime;
+                    life = 1 - (elapsed / duration);
+                    
+                    if (life <= 0) {
+                        particle.remove();
+                        return;
+                    }
+                    
+                    posX += vx * (1 - life * 0.2);
+                    posY += vy * (1 - life * 0.3) - 2;
+                    
+                    particle.style.left = posX + 'px';
+                    particle.style.top = posY + 'px';
+                    particle.style.opacity = Math.max(0, life);
+                    particle.style.transform = `scale(${Math.max(0, life)})`;
+                    
+                    requestAnimationFrame(animate);
+                }
+                
+                animate();
+            }
+        }
+
+        // Tạo text nổi lên
+        function createFloatingText(text, x, y) {
+            const textEl = document.createElement('div');
+            textEl.textContent = text;
+            textEl.style.position = 'fixed';
+            textEl.style.left = x + 'px';
+            textEl.style.top = y + 'px';
+            textEl.style.pointerEvents = 'none';
+            textEl.style.fontSize = '1.8em';
+            textEl.style.fontWeight = 'bold';
+            textEl.style.color = '#ff1493';
+            textEl.style.textShadow = '0 0 15px rgba(255, 20, 147, 0.9), 0 0 30px rgba(255, 20, 147, 0.5)';
+            textEl.style.zIndex = '1001';
+            textEl.style.whiteSpace = 'nowrap';
+            textEl.style.filter = 'drop-shadow(0 0 10px #ff1493)';
+            
+            document.body.appendChild(textEl);
+            
+            let posY = y;
+            let life = 1;
+            const duration = 3000;
+            const startTime = Date.now();
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                life = 1 - (elapsed / duration);
+                
+                if (life <= 0) {
+                    textEl.remove();
+                    return;
+                }
+                
+                posY -= 2;
+                
+                textEl.style.top = posY + 'px';
+                textEl.style.opacity = Math.max(0, life);
+                textEl.style.transform = `scale(${Math.max(0, life)})`;
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        // Khởi tạo
+        createStarfield();
+
+        // Tạo link chia sẻ
+        function generateShareLink() {
+            const friendName = document.getElementById('friendNameInput').value || 'bạn';
+            const baseUrl = window.location.href.split('?')[0];
+            const shareUrl = `${baseUrl}?name=${encodeURIComponent(friendName)}`;
+            
+            document.getElementById('shareLinkBox').textContent = shareUrl;
+            document.getElementById('shareMessage').textContent = `Link chúc mừng ${friendName}:`;
+            document.getElementById('shareLinkDisplay').classList.add('active');
+        }
+
+        // Sao chép link
+        function copyLink() {
+            const link = document.getElementById('shareLinkBox').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('✅ Link đã sao chép!');
+            }).catch(() => {
+                alert('❌ Sao chép thất bại!');
+            });
+        }
+
+        // Copy để share
+        function shareZalo() {
+            const link = document.getElementById('shareLinkBox').textContent;
+            const friendName = document.getElementById('friendNameInput').value || 'bạn';
+            const message = `💕 ${friendName} yêu quý, mình gửi một lời chúc tặng cho bạn:\n\n${link}`;
+            
+            navigator.clipboard.writeText(message).then(() => {
+                alert('✅ Tin nhắn đã sao chép! Hãy dán vào Zalo hoặc Messenger.');
+            });
+        }
+
+        // Đóng share
+        function closeShare() {
+            document.getElementById('shareLinkDisplay').classList.remove('active');
+        }
+
+        // Kiểm tra URL có tên không
+        window.addEventListener('load', function() {
+            const params = new URLSearchParams(window.location.search);
+            const friendName = params.get('name');
+            
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            setTimeout(() => {
+                createHeartParticles(centerX, centerY - 80);
+                if (friendName) {
+                    createFloatingText(`Chúc ${friendName} hạnh phúc 💕`, centerX - 140, centerY - 150);
+                } else {
+                    createFloatingText('Chúc bạn hạnh phúc 💕', centerX - 120, centerY - 150);
+                }
+            }, 500);
+        });
+
+        // Resize
+        window.addEventListener('resize', function() {
+            const svg = document.getElementById('starfield');
+            svg.setAttribute('width', window.innerWidth);
+            svg.setAttribute('height', window.innerHeight);
+            svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+        });
+
+        // Click bất kỳ nơi nào (trừ input/button)
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('.share-link-display')) {
+                return;
+            }
+
+            const wishes = [
+                'Chúc bạn hạnh phúc 💕',
+                'Yêu bạn 💖',
+                'Cảm ơn bạn ❤️',
+                'Bạn tuyệt vời 💝',
+                'Thương bạn 💗',
+                'Mãi yêu 💕',
+                'Chúc bạn vui 💖',
+                'Bạn đẹp lắm 💝'
+            ];
+
+            const randomWish = wishes[Math.floor(Math.random() * wishes.length)];
+            
+            createHeartParticles(e.clientX, e.clientY);
+            createFloatingText(randomWish, e.clientX - 70, e.clientY - 50);
+        });
+    </script>
+</body>
+</html>

@@ -1,2 +1,0 @@
-# Long-i
-chào em
